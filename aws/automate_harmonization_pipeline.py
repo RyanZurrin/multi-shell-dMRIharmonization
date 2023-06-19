@@ -13,6 +13,7 @@
 
 import argparse
 import configparser
+import datetime
 import subprocess
 import sys
 import logging
@@ -84,7 +85,9 @@ def run_bash_script(config, verbose, create, process, debug):
 
 
 def main(args_):
-    setup_logging("pipeline.log", args_.verbose)
+    now = datetime.datetime.now()
+    log_file = f"logs/pipeline_{now.strftime('%Y-%m-%d_%H-%M-%S')}.log"
+    setup_logging(log_file, args_.verbose)
 
     # Load the configuration file
     config = configparser.ConfigParser()
@@ -143,62 +146,66 @@ def main(args_):
         os.makedirs(directory, exist_ok=True)
         logging.info(f"Checked and/or created the directory: {directory}")
 
-    # Run the download_from_s3 script
-    try:
-        # check that reference and target are not empty strings and if not run the download_from_s3 script
-        if reference_dir != "":
-            subprocess.run(
-                f"python download_from_s3.py -t {config['s3_download']['reference_textfile']} -d {reference_dir} -m {config['s3_download']['multithreading']}",
-                shell=True,
-                check=True,
-            )
-            logging.info("Successfully ran the download_from_s3 script for the reference data.")
-        if target_dir != "":
-            subprocess.run(
-                f"python download_from_s3.py -t {config['s3_download']['target_textfile']} -d {target_dir} -m {config['s3_download']['multithreading']}",
-                shell=True,
-                check=True,
-            )
-            logging.info("Successfully ran the download_from_s3 script for the target data.")
-    except subprocess.CalledProcessError as e:
-        logging.error(
-            f"An error occurred while running the download_from_s3 script: {e}"
-        )
-        sys.exit(1)
+    # # Run the download_from_s3 script
+    # try:
+    #     # check that reference_textfile and target_textfile are not empty in the config file
+    #     if "reference_textfile" in config["s3_download"] and config["s3_download"]["reference_textfile"]:
+    #         logging.info("Downloading the reference data from S3.")
+    #         subprocess.run(
+    #             f"python download_from_s3.py -t {config['s3_download']['reference_textfile']} -d {reference_dir} -m {config['s3_download']['multithreading']}",
+    #             shell=True,
+    #             check=True,
+    #         )
+    #         logging.info("Successfully ran the download_from_s3 script for the reference data.")
+    #     if "target_textfile" in config["s3_download"] and config["s3_download"]["target_textfile"]:
+    #         logging.info("Downloading the target data from S3.")
+    #         subprocess.run(
+    #             f"python download_from_s3.py -t {config['s3_download']['target_textfile']} -d {target_dir} -m {config['s3_download']['multithreading']}",
+    #             shell=True,
+    #             check=True,
+    #         )
+    #         logging.info("Successfully ran the download_from_s3 script for the target data.")
+    # except subprocess.CalledProcessError as e:
+    #     logging.error(
+    #         f"An error occurred while running the download_from_s3 script: {e}"
+    #     )
+    #     sys.exit(1)
 
-    # download the template if it is specified in the config file
-    if 's3_download' in config and 'template_path' in config['s3_download'] and config['s3_download']['template_path']:
-        try:
-            subprocess.run(
-                f"python download_from_s3.py -p {config['s3_download']['template_path']} -d {template_dir} -m {config['s3_download']['multithreading']}",
-                shell=True,
-                check=True,
-            )
-            logging.info("Successfully ran the download_from_s3 script.")
-        except subprocess.CalledProcessError as e:
-            logging.error(
-                f"An error occurred while running the download_from_s3 script: {e}"
-            )
-            sys.exit(1)
-
-    # Run the write_local_paths script
-    try:
-        subprocess.run(
-            f"python write_local_paths.py -d {reference_dir} -o {config['local_paths']['reference_output']}",
-            shell=True,
-            check=True,
-        )
-        subprocess.run(
-            f"python write_local_paths.py -d {target_dir} -o {config['local_paths']['target_output']}",
-            shell=True,
-            check=True,
-        )
-        logging.info("Successfully ran the write_local_paths script.")
-    except subprocess.CalledProcessError as e:
-        logging.error(
-            f"An error occurred while running the write_local_paths script: {e}"
-        )
-        sys.exit(1)
+    # # download the template if it is specified in the config file
+    # if 's3_download' in config and 'template_path' in config['s3_download'] and config['s3_download']['template_path']:
+    #     logging.info("Downloading the template from S3.")
+    #     try:
+    #         subprocess.run(
+    #             f"python download_from_s3.py -p {config['s3_download']['template_path']} -d {template_dir} -m {config['s3_download']['multithreading']}",
+    #             shell=True,
+    #             check=True,
+    #         )
+    #         logging.info("Successfully ran the download_from_s3 script for the template.")
+    #     except subprocess.CalledProcessError as e:
+    #         logging.error(
+    #             f"An error occurred while running the download_from_s3 script: {e}"
+    #         )
+    #         sys.exit(1)
+    #
+    # # Run the write_local_paths script
+    # try:
+    #     subprocess.run(
+    #         f"python write_local_paths.py -d {reference_dir} -o {config['local_paths']['reference_output']}",
+    #         shell=True,
+    #         check=True,
+    #     )
+    #     logging.info("Successfully ran the write_local_paths script for the reference data.")
+    #     subprocess.run(
+    #         f"python write_local_paths.py -d {target_dir} -o {config['local_paths']['target_output']}",
+    #         shell=True,
+    #         check=True,
+    #     )
+    #     logging.info("Successfully ran the write_local_paths script for the target data.")
+    # except subprocess.CalledProcessError as e:
+    #     logging.error(
+    #         f"An error occurred while running the write_local_paths script: {e}"
+    #     )
+    #     sys.exit(1)
 
     # Run the bash script
     run_bash_script(config["bash_script"], args_.verbose, create, process, debug)

@@ -10,7 +10,7 @@
 # Submit issues at https://github.com/RyanZurrin/multi-shell-dMRIharmonization/issues
 # View LICENSE at https://github.com/RyanZurrin/multi-shell-dMRIharmonization//LICENSE
 # ===============================================================================
-
+import logging
 import os
 import csv
 import argparse
@@ -34,9 +34,9 @@ def download_from_s3(s3_path, local_path):
             fs.get(s3_path, os.path.join(local_path, os.path.basename(s3_path)))
             return s3_path
         else:
-            print(f"File {s3_path} does not exist in S3")
+            logging.info(f"File {s3_path} does not exist in S3")
     except Exception as e:
-        print(f"An error occurred while trying to download {s3_path}: {e}")
+        logging.error(f"An error occurred while trying to download {s3_path}: {e}")
 
 
 def download_directory_from_s3(s3_directory, local_directory, multithreading):
@@ -59,11 +59,11 @@ def download_directory_from_s3(s3_directory, local_directory, multithreading):
                     downloaded_files.append(result)
 
         # Print the downloaded files at the end
-        print("Downloaded files:")
+        logging.info("Downloaded files:")
         for file in downloaded_files:
             print(file)
     except Exception as e:
-        print(f"An error occurred while trying to download directory {s3_directory}: {e}")
+        logging.error(f"An error occurred while trying to download directory {s3_directory}: {e}")
 
 
 def handle_files(nii_file, mask_file):
@@ -126,7 +126,7 @@ def main():
     if args.textfile is not None:
         files_to_download = get_files_to_download(args.textfile)
 
-    print(f"Total files to download: {len(files_to_download)}")
+    logging.info(f"Total files to download: {len(files_to_download)}")
 
     # List to store the downloaded files
     downloaded_files = []
@@ -156,11 +156,11 @@ def main():
     # Download the template if requested
     if args.template is not None:
         template_s3_path = args.template
-        template_local_path = os.path.join(args.directory, "template")
+        template_local_path = args.directory
         download_directory_from_s3(template_s3_path, template_local_path, args.multithreading)
 
     # Print the downloaded files at the end
-    print("Downloaded files:")
+    logging.info("Downloaded files:")
     for file in downloaded_files:
         print(file)
 
