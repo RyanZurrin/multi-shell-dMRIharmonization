@@ -22,16 +22,14 @@ from util import *
 
 def resize_spm(lowResImg, inPrefix):
 
-    dataFile= inPrefix + '_data.mat'
+    dataFile = f'{inPrefix}_data.mat'
     # save volume
     savemat(dataFile, {'lowResImg': lowResImg})
 
     # call MATLAB_Runtime based spm bspline interpolation
     p= Popen((' ').join([pjoin(SCRIPTDIR,'spm_bspline_exec', 'bspline'), inPrefix]), shell= True)
     p.wait()
-    highResImg= np.nan_to_num(loadmat(inPrefix+'_resampled.mat')['highResImg'])
-
-    return highResImg
+    return np.nan_to_num(loadmat(f'{inPrefix}_resampled.mat')['highResImg'])
 
 
 def save_high_res(fileName, sp_high, lowResImgHdr, highResImg):
@@ -69,7 +67,7 @@ def resampling(lowResImgPath, lowResMaskPath, lowResImg, lowResImgHdr, lowResMas
     if interp_toolbox=='scipy':
         spatial_factor = sp_low / sp_high
         sx, sy, sz = [int(x) for x in lowResImg.shape[:3] * spatial_factor]
-    
+
         # resample the dwi ----------------------------------------------------------------
         highResImg= np.zeros((sx, sy, sz, lowResImg.shape[3]), dtype='float')
         for i in np.where(bvals > B0_THRESH)[0]:
@@ -88,7 +86,15 @@ def resampling(lowResImgPath, lowResMaskPath, lowResImg, lowResImgHdr, lowResMas
 
         inPrefix= lowResImgPath.split('.nii')[0]
         # save space resolutions, image size, and bspline order
-        savemat(inPrefix+'_sp.mat', {'sp_high':sp_high,'sp_low':sp_low, 'imgDim':lowResImg.shape[:3], 'sOrder':sOrder})
+        savemat(
+            f'{inPrefix}_sp.mat',
+            {
+                'sp_high': sp_high,
+                'sp_low': sp_low,
+                'imgDim': lowResImg.shape[:3],
+                'sOrder': sOrder,
+            },
+        )
 
         # resample the dwi ----------------------------------------------------------------
         highResImg = np.zeros((sx, sy, sz, lowResImg.shape[3]), dtype='float')
@@ -102,22 +108,30 @@ def resampling(lowResImgPath, lowResMaskPath, lowResImg, lowResImgHdr, lowResMas
 
 
         # clean up the mat files
-        remove(inPrefix+'_sp.mat')
-        remove(inPrefix+'_data.mat')
-        remove(inPrefix+'_resampled.mat')
-        
+        remove(f'{inPrefix}_sp.mat')
+        remove(f'{inPrefix}_data.mat')
+        remove(f'{inPrefix}_resampled.mat')
+                
 
         # resample the mask
         inPrefix= lowResMaskPath.split('.nii')[0]
-        savemat(inPrefix+'_sp.mat', {'sp_high':sp_high,'sp_low':sp_low, 'imgDim':lowResImg.shape[:3], 'sOrder':1})
+        savemat(
+            f'{inPrefix}_sp.mat',
+            {
+                'sp_high': sp_high,
+                'sp_low': sp_low,
+                'imgDim': lowResImg.shape[:3],
+                'sOrder': 1,
+            },
+        )
         highResMask= resize_spm(lowResMask, lowResMaskPath.split('.nii')[0])
 
 
 
         # clean up the mat files
-        remove(inPrefix+'_sp.mat')
-        remove(inPrefix+'_data.mat')
-        remove(inPrefix+'_resampled.mat')
+        remove(f'{inPrefix}_sp.mat')
+        remove(f'{inPrefix}_data.mat')
+        remove(f'{inPrefix}_resampled.mat')
 
     else:
         raise ValueError('Undefined interp_toolbox')
@@ -167,6 +181,4 @@ def resampling(lowResImgPath, lowResMaskPath, lowResImg, lowResImgHdr, lowResMas
     return (highResImgPath, highResMaskPath)
 
 
-if __name__=='__main__':
-    pass
 

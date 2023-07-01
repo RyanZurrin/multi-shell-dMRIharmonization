@@ -27,11 +27,11 @@ def determineNshm(bvalFile):
 
     if N_b<6:
         raise ValueError(f'At least 6 gradients are necessary for each b-shell, b-shell has only {N_b}')
-    elif N_b>=6 and N_b<15:
+    elif N_b < 15:
         N_shm = 2
-    elif N_b>=15 and N_b<28:
+    elif N_b < 28:
         N_shm = 4
-    elif N_b>=28 and N_b<45:
+    elif N_b < 45:
         N_shm = 6
     else:
         N_shm = 8
@@ -55,7 +55,7 @@ def verifyNshmForAll(csvFile, N_shm):
     for imgPath in read_imgs_masks(csvFile)[0]:
         directory = dirname(imgPath)
         prefix = basename(imgPath).split('.nii')[0]
-        bvalFile = pjoin(directory, prefix + '.bval')
+        bvalFile = pjoin(directory, f'{prefix}.bval')
         verifyNshm(N_shm, bvalFile)
 
 
@@ -73,7 +73,5 @@ def verifyNshm(nshm, bvalFile):
 
 
 
-if __name__=='__main__':
-    pass
 
 

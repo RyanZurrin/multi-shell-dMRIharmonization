@@ -46,12 +46,12 @@ def dti_harm(imgPath, maskPath):
     prefix = basename(inPrefix)
 
     outPrefix = pjoin(directory, 'dti', prefix)
-    if not isfile(outPrefix+'_FA.nii.gz'):
-       dti(imgPath, maskPath, inPrefix, outPrefix)
+    if not isfile(f'{outPrefix}_FA.nii.gz'):
+        dti(imgPath, maskPath, inPrefix, outPrefix)
 
     outPrefix = pjoin(directory, 'harm', prefix)
-    if not isfile(outPrefix+'_L0.nii.gz'):
-       rish(imgPath, maskPath, inPrefix, outPrefix, N_shm)
+    if not isfile(f'{outPrefix}_L0.nii.gz'):
+        rish(imgPath, maskPath, inPrefix, outPrefix, N_shm)
 
 
 def preprocessing(imgPath, maskPath):
@@ -74,34 +74,34 @@ def preprocessing(imgPath, maskPath):
     # modifies data only
     if denoise:
         inPrefix = imgPath.split('.nii')[0]
-        outPrefix = inPrefix + '_denoised'
+        outPrefix = f'{inPrefix}_denoised'
 
-        if force or not isfile(outPrefix+'.nii.gz'):
+        if force or not isfile(f'{outPrefix}.nii.gz'):
             print('Denoising ', imgPath)
             lowResImg, _ = denoising(lowResImg, lowResMask)
-            save_nifti(outPrefix+'.nii.gz', lowResImg, lowRes.affine, lowResImgHdr)
-            copyfile(inPrefix + '.bvec', outPrefix + '.bvec')
-            copyfile(inPrefix + '.bval', outPrefix + '.bval')
+            save_nifti(f'{outPrefix}.nii.gz', lowResImg, lowRes.affine, lowResImgHdr)
+            copyfile(f'{inPrefix}.bvec', f'{outPrefix}.bvec')
+            copyfile(f'{inPrefix}.bval', f'{outPrefix}.bval')
 
         maskPath= maskPath
-        imgPath= outPrefix+'.nii.gz'
+        imgPath = f'{outPrefix}.nii.gz'
 
 
     # modifies data, and bvals
     if bvalMap:
         inPrefix = imgPath.split('.nii')[0]
-        outPrefix = inPrefix + '_bmapped'
+        outPrefix = f'{inPrefix}_bmapped'
 
-        if force or not isfile(outPrefix+'.nii.gz'):
+        if force or not isfile(f'{outPrefix}.nii.gz'):
             print('B value mapping ', imgPath)
-            bvals, _ = read_bvals_bvecs(inPrefix + '.bval', None)
+            bvals, _ = read_bvals_bvecs(f'{inPrefix}.bval', None)
             lowResImg, bvals = remapBval(lowResImg, lowResMask, bvals, bvalMap)
-            save_nifti(outPrefix+'.nii.gz', lowResImg, lowRes.affine, lowResImgHdr)
-            copyfile(inPrefix + '.bvec', outPrefix + '.bvec')
-            write_bvals(outPrefix + '.bval', bvals)
+            save_nifti(f'{outPrefix}.nii.gz', lowResImg, lowRes.affine, lowResImgHdr)
+            copyfile(f'{inPrefix}.bvec', f'{outPrefix}.bvec')
+            write_bvals(f'{outPrefix}.bval', bvals)
 
         maskPath= maskPath
-        imgPath= outPrefix+'.nii.gz'
+        imgPath = f'{outPrefix}.nii.gz'
 
     try:
         sp_high = np.array([float(i) for i in resample.split('x')])
@@ -111,18 +111,18 @@ def preprocessing(imgPath, maskPath):
     # modifies data, mask, and headers
     if resample and (abs(sp_high-lowResImgHdr['pixdim'][1:4])>10e-3).any():
         inPrefix = imgPath.split('.nii')[0]
-        outPrefix = inPrefix + '_resampled'
+        outPrefix = f'{inPrefix}_resampled'
 
-        if force or not isfile(outPrefix+'.nii.gz'):
+        if force or not isfile(f'{outPrefix}.nii.gz'):
             print('Resampling ', imgPath)
-            bvals, _ = read_bvals_bvecs(inPrefix + '.bval', None)
+            bvals, _ = read_bvals_bvecs(f'{inPrefix}.bval', None)
             imgPath, maskPath = resampling(imgPath, maskPath, lowResImg, lowResImgHdr, lowResMask, lowResMaskHdr, sp_high, bvals)
-            copyfile(inPrefix + '.bvec', outPrefix + '.bvec')
-            copyfile(inPrefix + '.bval', outPrefix + '.bval')
+            copyfile(f'{inPrefix}.bvec', f'{outPrefix}.bvec')
+            copyfile(f'{inPrefix}.bval', f'{outPrefix}.bval')
         else:
             maskPath= maskPath.split('.nii')[0]+ '_resampled.nii.gz'
 
-        imgPath= outPrefix+'.nii.gz'
+        imgPath = f'{outPrefix}.nii.gz'
 
 
     return (imgPath, maskPath)
@@ -132,17 +132,17 @@ def preprocessing(imgPath, maskPath):
 def common_processing(caselist):
     
     imgs, masks = read_caselist(caselist)
-    
+
     # compute dti_harm of unprocessed data
     pool = multiprocessing.Pool(N_proc)
     for imgPath,maskPath in zip(imgs,masks):
         pool.apply_async(func= dti_harm, args= (imgPath,maskPath))
     pool.close()
     pool.join()
-    
-    
+
+
     try:
-        copyfile(caselist, caselist + '.modified')
+        copyfile(caselist, f'{caselist}.modified')
     except SameFileError:
         pass
 

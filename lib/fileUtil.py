@@ -57,7 +57,7 @@ def read_caselist(file):
         imgs = []
         masks = []
         content= f.read()
-        for line, row in enumerate(content.split()):
+        for row in content.split():
             temp= [element for element in row.split(',') if element] # handling w/space
             imgs.append(temp[0])
             masks.append(temp[1])

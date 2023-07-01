@@ -32,7 +32,7 @@ def check_bshells(ref_imgs, ref_bvals):
             FileNotFoundError(imgPath)
 
         inPrefix = abspath(imgPath).split('.nii')[0]
-        bvals= findBShells(inPrefix+'.bval')
+        bvals = findBShells(f'{inPrefix}.bval')
 
         if (bvals==ref_bvals).all():
             print('b-shells matched for', imgPath.name)
@@ -102,7 +102,7 @@ def consistencyCheck(ref_csv, outputBshellFile= None, outPutResolutionFile= None
         print(f'Using {ref_bshell_img} to determine b-shells')
 
         inPrefix = abspath(ref_bshell_img).split('.nii')[0]
-        ref_bvals = findBShells(inPrefix + '.bval', outputBshellFile)
+        ref_bvals = findBShells(f'{inPrefix}.bval', outputBshellFile)
 
         ref_res = load(ref_bshell_img).header['pixdim'][1:4]
         np.save(outPutResolutionFile, ref_res)

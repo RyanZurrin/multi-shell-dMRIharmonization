@@ -17,10 +17,7 @@ def find_b0(dwi, where_b0, mask= None):
     b0= dwi[...,where_b0].mean(-1)
     np.nan_to_num(b0).clip(min= 0., out= b0)
 
-    if mask is not None:
-        return b0*mask
-    else:
-        return b0
+    return b0*mask if mask is not None else b0
 
 
 def normalize_data(dwi, where_b0= None, mask= None, b0= None):

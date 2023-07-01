@@ -38,7 +38,7 @@ def antsReg(img, mask, mov, outPrefix):
     if verbose:
         f= sys.stdout
     else:
-        logFile= pjoin(outPrefix+ '_ANTs.log')
+        logFile = pjoin(f'{outPrefix}_ANTs.log')
         f= open(logFile, 'w')
         print(f'See {logFile} for details of registration')
 
@@ -50,7 +50,6 @@ def antsReg(img, mask, mov, outPrefix):
                                '-m', mov,
                                '-o', outPrefix,
                                '-e', '123456']), shell= True, stdout= f, stderr= sys.stdout)
-        p.wait()
     else:
         p= Popen((' ').join(['antsRegistrationSyNQuick.sh',
                                '-d', '3',
@@ -58,8 +57,7 @@ def antsReg(img, mask, mov, outPrefix):
                                '-m', mov,
                                '-o', outPrefix,
                                '-e', '123456']), shell= True, stdout= f, stderr= sys.stdout)
-        p.wait()
-
+    p.wait()
     if f.name!='<sys.stdout>':
         f.close()
 
@@ -85,9 +83,7 @@ def custom_spherical_structure(D):
     ses2= int(np.ceil(D/2))
     [y,x,z]= np.meshgrid(np.arange(-sw,sw+1),np.arange(-sw,sw+1),np.arange(-sw,sw+1))
     m= np.sqrt(x**2 + y**2 + z**2)
-    b= (m <= m[ses2,ses2,D-1])
-
-    return b
+    return (m <= m[ses2,ses2,D-1])
 
 
 def findLargestConnectMask(img, mask):
@@ -114,7 +110,7 @@ def approx(imgPath, maskPath):
     prefix = psplit(inPrefix)[-1]
     outPrefix = pjoin(directory, 'harm', prefix)
     harmImg= pjoin(directory, f'reconstructed_{prefix}.nii.gz')
-    
+
     if not force and isfile(harmImg):
         return
 
@@ -142,8 +138,8 @@ def approx(imgPath, maskPath):
 
     # save approximated data
     save_nifti(harmImg, S_hat_final, affine, hdr)
-    copyfile(inPrefix + '.bvec', harmImg.split('.nii')[0] + '.bvec')
-    copyfile(inPrefix + '.bval', harmImg.split('.nii')[0] + '.bval')
+    copyfile(f'{inPrefix}.bvec', harmImg.split('.nii')[0] + '.bvec')
+    copyfile(f'{inPrefix}.bval', harmImg.split('.nii')[0] + '.bval')
 
 
 def ring_masking(directory, prefix, maskPath, shm_coeff, b0, qb_model, hdr):
@@ -190,9 +186,10 @@ def ring_masking(directory, prefix, maskPath, shm_coeff, b0, qb_model, hdr):
 
         ind= int(i/2)
         denoisedImg= applymask(denoisedImg, mask_final)
-        for level in range(shs_same_level[ind][0], shs_same_level[ind][1]):
-            mapped_cs.append(denoisedImg * shm_coeff[ :,:,:,level])
-
+        mapped_cs.extend(
+            denoisedImg * shm_coeff[:, :, :, level]
+            for level in range(shs_same_level[ind][0], shs_same_level[ind][1])
+        )
     S_hat= np.dot(np.moveaxis(mapped_cs, 0, -1), B.T)
     # keep only upper half of the reconstruction signal
     S_hat= S_hat[..., :int(S_hat.shape[3]/2)]
@@ -235,7 +232,7 @@ def reconst(imgPath, maskPath, moving, templatePath):
 
     # glob the directory for _b{bmax} transform files
     # if not glob(outPrefix.replace(f'_b{bshell_b}','*')+'1Warp.nii.gz'):
-    if force or not isfile(outPrefix+'1Warp.nii.gz'):
+    if force or not isfile(f'{outPrefix}1Warp.nii.gz'):
         fixed = pjoin(directory, 'dti', f'{prefix}_FA.nii.gz')
         antsReg(fixed, maskPath, moving, outPrefix)
 
@@ -243,15 +240,15 @@ def reconst(imgPath, maskPath, moving, templatePath):
 
     print(f'Reconstructing signal from {imgPath} rish features ...')
     harmImg, harmMask = ring_masking(directory, prefix, maskPath, shm_coeff, b0, qb_model, img.header)
-    copyfile(inPrefix + '.bvec', harmImg.split('.nii')[0] + '.bvec')
-    copyfile(inPrefix + '.bval', harmImg.split('.nii')[0] + '.bval')
+    copyfile(f'{inPrefix}.bvec', harmImg.split('.nii')[0] + '.bvec')
+    copyfile(f'{inPrefix}.bval', harmImg.split('.nii')[0] + '.bval')
 
 
     return (harmImg, harmMask)
 
 def stack_b0(b0s_mask, dwi, b0):
 
-    N= int(len(b0s_mask)/2)
+    N = len(b0s_mask) // 2
     ind= np.where(b0s_mask[ :N])[0]
 
     S_hat_final= []

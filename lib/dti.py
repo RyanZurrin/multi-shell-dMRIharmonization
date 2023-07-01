@@ -22,7 +22,7 @@ def dti(imgPath, maskPath, inPrefix, outPrefix, tool='FSL'):
     if tool=='DIPY':
         print('dipy dtifit ', imgPath)
 
-        bvals, bvecs = read_bvals_bvecs(inPrefix + '.bval', inPrefix + '.bvec')
+        bvals, bvecs = read_bvals_bvecs(f'{inPrefix}.bval', f'{inPrefix}.bvec')
 
         gtab= gradient_table(bvals, bvecs, b0_threshold= B0_THRESH)
         dtimodel= dipyDti.TensorModel(gtab, fit_method="LS")
@@ -30,8 +30,8 @@ def dti(imgPath, maskPath, inPrefix, outPrefix, tool='FSL'):
         fa= dtifit.fa
         md= dtifit.md
 
-        save_nifti(outPrefix + '_FA.nii.gz', fa, vol.affine, vol.header)
-        save_nifti(outPrefix + '_MD.nii.gz', md, vol.affine, vol.header)
+        save_nifti(f'{outPrefix}_FA.nii.gz', fa, vol.affine, vol.header)
+        save_nifti(f'{outPrefix}_MD.nii.gz', md, vol.affine, vol.header)
 
 
     elif tool=='FSL':
@@ -39,12 +39,21 @@ def dti(imgPath, maskPath, inPrefix, outPrefix, tool='FSL'):
         from plumbum import FG
 
         print('fsl dtifit ', imgPath)
-        dtifit['-k', imgPath,
-               '-m', maskPath,
-               '-r', inPrefix + '.bvec',
-               '-b', inPrefix + '.bval',
-               '-o', outPrefix
-              ] & FG
+        (
+            dtifit[
+                '-k',
+                imgPath,
+                '-m',
+                maskPath,
+                '-r',
+                f'{inPrefix}.bvec',
+                '-b',
+                f'{inPrefix}.bval',
+                '-o',
+                outPrefix,
+            ]
+            & FG
+        )
 
 
     rms = np.sqrt(np.mean(np.power(masked_vol,2), axis=3))
@@ -52,9 +61,7 @@ def dti(imgPath, maskPath, inPrefix, outPrefix, tool='FSL'):
     ga3D = ga.reshape(masked_vol.shape[0], masked_vol.shape[1], masked_vol.shape[2])
     gfa_vol = np.nan_to_num(ga3D)
 
-    save_nifti(outPrefix + '_GFA.nii.gz', gfa_vol, vol.affine, vol.header)
+    save_nifti(f'{outPrefix}_GFA.nii.gz', gfa_vol, vol.affine, vol.header)
 
 
-if __name__ == '__main__':
-    pass
 

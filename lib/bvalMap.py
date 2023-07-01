@@ -48,5 +48,3 @@ def remapBval(dwi, mask, bvals, bNew):
     return (dwiNew, np.array(bvalsNew))
 
 
-if __name__=='__main__':
-    pass

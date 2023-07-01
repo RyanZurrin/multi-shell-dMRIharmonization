@@ -26,7 +26,7 @@ def rish(imgPath, maskPath, inPrefix, outPrefix, N_shm, qb_model= None):
 
     if not qb_model:
         print('Computing shm_coeff of ', imgPath)
-        bvals, bvecs = read_bvals_bvecs(inPrefix+'.bval', inPrefix+'.bvec')
+        bvals, bvecs = read_bvals_bvecs(f'{inPrefix}.bval', f'{inPrefix}.bvec')
 
         # make bvals and bvecs full sampled to encounter reconstruction error in reconstSignal.py
         bvals= np.append(bvals, bvals)
@@ -38,8 +38,8 @@ def rish(imgPath, maskPath, inPrefix, outPrefix, N_shm, qb_model= None):
 
         # save baseline image
         b0 = find_b0(data, where_b0=np.where(qb_model.gtab.b0s_mask)[0])
-        if not exists(inPrefix+'_bse.nii.gz'):
-            save_nifti(inPrefix+'_bse.nii.gz', applymask(b0, mask_data), affine, hdr)
+        if not exists(f'{inPrefix}_bse.nii.gz'):
+            save_nifti(f'{inPrefix}_bse.nii.gz', applymask(b0, mask_data), affine, hdr)
     else:
         b0= None
 
@@ -70,5 +70,3 @@ def rish(imgPath, maskPath, inPrefix, outPrefix, N_shm, qb_model= None):
 
     return (b0, shm_coeff, qb_model)
 
-if __name__=='__main__':
-    pass

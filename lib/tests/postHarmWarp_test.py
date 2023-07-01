@@ -22,7 +22,7 @@ from util import *
 SCRIPTDIR= abspath(dirname(__file__))
 
 config = ConfigParser()
-config.read(SCRIPTDIR+'/harm_config.ini')
+config.read(f'{SCRIPTDIR}/harm_config.ini')
 N_proc = int(config['DEFAULT']['N_proc'])
 diffusionMeasures = ['FA'] # [x for x in config['DEFAULT']['diffusionMeasures'].split(',')]
 bshell_b = int(config['DEFAULT']['bshell_b'])
@@ -33,7 +33,7 @@ def antsReg(img, mask, mov, outPrefix):
     if verbose:
         f= sys.stdout
     else:
-        logFile= pjoin(outPrefix+ '_ANTs.log')
+        logFile = pjoin(f'{outPrefix}_ANTs.log')
         f= open(logFile, 'w')
         print(f'See {logFile} for details of registration')
 
@@ -45,7 +45,6 @@ def antsReg(img, mask, mov, outPrefix):
                                '-m', mov,
                                '-o', outPrefix,
                                '-e', '123456']), shell= True, stdout= f, stderr= sys.stdout)
-        p.wait()
     else:
         p= Popen((' ').join(['antsRegistrationSyNQuick.sh',
                                '-d', '3',
@@ -53,8 +52,7 @@ def antsReg(img, mask, mov, outPrefix):
                                '-m', mov,
                                '-o', outPrefix,
                                '-e', '123456']), shell= True, stdout= f, stderr= sys.stdout)
-        p.wait()
-
+    p.wait()
     if f.name!='<sys.stdout>':
         f.close()
 
@@ -65,15 +63,15 @@ def register_reference(imgPath, warp2mni, trans2mni, templatePath):
     directory = dirname(imgPath)
     inPrefix = imgPath.split('.nii')[0]
     prefix = basename(inPrefix)
-    
+
     for dm in diffusionMeasures:
 
-        output = pjoin(templatePath, prefix + f'_InMNI_{dm}.nii.gz')
+        output = pjoin(templatePath, f'{prefix}_InMNI_{dm}.nii.gz')
 
         # reference site have been already warped to reference template space in buildTemplate.py: warp_bands()
         # warped data are pjoin(templatePath, prefix, prefix + f'_WarpedFA.nii.gz')
-        moving = pjoin(templatePath, prefix + f'_Warped{dm}.nii.gz')
-        
+        moving = pjoin(templatePath, f'{prefix}_Warped{dm}.nii.gz')
+
         if isfile(moving):
             print('moving image:', basename(moving))
         if isfile(output):
@@ -97,18 +95,18 @@ def register_target(imgPath, templatePath):
     inPrefix = imgPath.split('.nii')[0]
     prefix = basename(inPrefix)
 
-    dmImg = pjoin(directory, 'dti', prefix + f'_FA.nii.gz')
+    dmImg = pjoin(directory, 'dti', f'{prefix}_FA.nii.gz')
     outPrefix = pjoin(templatePath, prefix.replace(f'_b{bshell_b}','') + '_FA_ToMNI')
-    warp2mni = outPrefix + '1Warp.nii.gz'
-    trans2mni = outPrefix + '0GenericAffine.mat'
+    warp2mni = f'{outPrefix}1Warp.nii.gz'
+    trans2mni = f'{outPrefix}0GenericAffine.mat'
     # unprocessed target data is given, so in case multiple debug is needed, pass the registration
     if not exists(warp2mni):
         antsReg(mniTmp, None, dmImg, outPrefix)
 
     for dm in diffusionMeasures:
-        output = pjoin(templatePath, prefix + f'_InMNI_{dm}.nii.gz')
+        output = pjoin(templatePath, f'{prefix}_InMNI_{dm}.nii.gz')
 
-        moving = pjoin(directory, 'dti', prefix + f'_{dm}.nii.gz')
+        moving = pjoin(directory, 'dti', f'{prefix}_{dm}.nii.gz')
         if isfile(moving):
             print('moving image:', basename(moving))
         if isfile(output):
@@ -132,21 +130,21 @@ def register_harmonized(imgPath, warp2mni, trans2mni, templatePath, siteName):
     inPrefix = imgPath.split('.nii')[0]
     prefix = basename(inPrefix)
 
-    dmImg = pjoin(directory, 'dti', prefix + f'_FA.nii.gz')
+    dmImg = pjoin(directory, 'dti', f'{prefix}_FA.nii.gz')
     dmTmp = pjoin(templatePath, f'Mean_{siteName}_FA_b{bshell_b}.nii.gz')
     maskTmp = pjoin(templatePath, f'{siteName}_Mask.nii.gz')
     outPrefix = pjoin(templatePath, prefix.replace(f'_b{bshell_b}','') + '_FA')
-    warp2tmp = outPrefix + '1Warp.nii.gz'
-    trans2tmp = outPrefix + '0GenericAffine.mat'
+    warp2tmp = f'{outPrefix}1Warp.nii.gz'
+    trans2tmp = f'{outPrefix}0GenericAffine.mat'
 
     # check existence of transforms created with _b{bmax}
     if not exists(warp2tmp):
         antsReg(dmTmp, maskTmp, dmImg, outPrefix)
 
     for dm in diffusionMeasures:
-        output = pjoin(templatePath, prefix + f'_InMNI_{dm}.nii.gz')
+        output = pjoin(templatePath, f'{prefix}_InMNI_{dm}.nii.gz')
 
-        moving = pjoin(directory, 'dti', prefix + f'_{dm}.nii.gz')
+        moving = pjoin(directory, 'dti', f'{prefix}_{dm}.nii.gz')
         if isfile(moving):
             print('moving image:', basename(moving))
         if isfile(warp2tmp) and isfile(trans2tmp):
@@ -172,8 +170,8 @@ def sub2tmp2mni(templatePath, siteName, caselist, ref= False, tar_unproc= False,
     moving = pjoin(templatePath, f'Mean_{siteName}_FA_b{bshell_b}.nii.gz')
 
     outPrefix= pjoin(templatePath, f'TemplateToMNI_{siteName}')
-    warp2mni= outPrefix+'1Warp.nii.gz'
-    trans2mni= outPrefix+'0GenericAffine.mat'
+    warp2mni = f'{outPrefix}1Warp.nii.gz'
+    trans2mni = f'{outPrefix}0GenericAffine.mat'
 
     # check existence of transforms created with _b{bmax}
     if not exists(warp2mni):

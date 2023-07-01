@@ -30,29 +30,29 @@ def separateBshells(imgPath, ref_bvals_file=None, ref_bvals=None):
 
 
     print('Separating b-shells for', imgPath)
-        
+
     imgPath= local.path(imgPath)
 
     img= load(imgPath._path)
     dwi= img.get_data()
     inPrefix= abspath(imgPath).split('.nii')[0]
-    bvals= np.array(read_bvals(inPrefix+'.bval'))
-    bvecs= np.array(read_bvecs(inPrefix+'.bvec'))
+    bvals = np.array(read_bvals(f'{inPrefix}.bval'))
+    bvecs = np.array(read_bvecs(f'{inPrefix}.bvec'))
 
 
     for bval in ref_bvals:
 
         # ind= np.where(bval==bvals)[0]
         ind= np.where(abs(bval-bvals)<=BSHELL_MIN_DIST)[0]
-        N_b= len(ind)
-
-        bPrefix = inPrefix + f'_b{int(bval)}'
-        
+        bPrefix = f'{inPrefix}_b{int(bval)}'
+                
 
         if bval==0.:
             b0 = find_b0(dwi, ind)
 
         else:
+            N_b= len(ind)
+
             b0_bshell = np.zeros((dwi.shape[0],dwi.shape[1],dwi.shape[2],N_b+1), dtype='float32')
             b0_bshell[:,:,:,0]= b0
             b0_bshell[:,:,:,1:]= dwi[:,:,:,ind]
@@ -62,11 +62,11 @@ def separateBshells(imgPath, ref_bvals_file=None, ref_bvals=None):
             b0_bvecs= np.zeros((N_b+1,3), dtype='float32')
             b0_bvecs[1:,]= bvecs[ind,: ]
 
-            
-            bshell_written= load(bPrefix+'.nii.gz').get_fdata()
-            bvals_written= read_bvals(bPrefix+'.bval')
-            bvecs_written= read_bvecs(bPrefix+'.bvec')
-            
+
+            bshell_written = load(f'{bPrefix}.nii.gz').get_fdata()
+            bvals_written = read_bvals(f'{bPrefix}.bval')
+            bvecs_written = read_bvecs(f'{bPrefix}.bvec')
+
             print('bshell difference', abs(b0_bshell-bshell_written).sum())
             print('bvals difference', (np.array(b0_bvals)-np.array(bvals_written)).sum())
             print('bvecs difference', (np.array(b0_bvecs)-np.array(bvecs_written)).sum())
@@ -89,8 +89,8 @@ def separateAllBshells(ref_csv, ref_bvals_file, ncpu=4, outPrefix= None):
 
     pool.close()
     pool.join()
-    
-    
+
+
     if outPrefix:
         outPrefix = abspath(outPrefix)
     else:
@@ -98,21 +98,18 @@ def separateAllBshells(ref_csv, ref_bvals_file, ncpu=4, outPrefix= None):
 
     for bval in ref_bvals:
 
-        f = open(f'{outPrefix}_b{int(bval)}.csv', 'w')
+        with open(f'{outPrefix}_b{int(bval)}.csv', 'w') as f:
+            if masks:
+                for imgPath, maskPath in zip(imgs, masks):
+                    inPrefix = abspath(imgPath).split('.nii')[0]
+                    bPrefix = f'{inPrefix}_b{int(bval)}'
+                    f.write(f'{bPrefix}.nii.gz,{maskPath}\n')
 
-        if masks:
-            for imgPath, maskPath in zip(imgs, masks):
-                inPrefix = abspath(imgPath).split('.nii')[0]
-                bPrefix = inPrefix + f'_b{int(bval)}'
-                f.write(f'{bPrefix}.nii.gz,{maskPath}\n')
-
-        else:
-            for imgPath in imgs:
-                inPrefix = abspath(imgPath).split('.nii')[0]
-                bPrefix = inPrefix + f'_b{int(bval)}'
-                f.write(f'{bPrefix}.nii.gz\n')
-
-        f.close()
+            else:
+                for imgPath in imgs:
+                    inPrefix = abspath(imgPath).split('.nii')[0]
+                    bPrefix = f'{inPrefix}_b{int(bval)}'
+                    f.write(f'{bPrefix}.nii.gz\n')
 
 
 class separateShells(cli.Application):

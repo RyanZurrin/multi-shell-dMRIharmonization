@@ -26,7 +26,7 @@ def harm_plot(ydata, labels, outPrefix, bshell_b):
 
     num_series, num_sub= np.shape(ydata)
 
-    iter_obj= [i for i in range(num_series)]
+    iter_obj = list(range(num_series))
 
     # errorbar plot
     plt.figure(1)

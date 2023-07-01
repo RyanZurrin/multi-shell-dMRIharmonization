@@ -107,7 +107,7 @@ def denoising(dwi, mask=None):
 
         # First estimation of Sigma^2;  Eq 1 from ISMRM presentation
         csum = np.cumsum(vals[::-1])
-        cmean = csum/np.array([i for i in range(1,R+1)])
+        cmean = csum / np.array(list(range(1,R+1)))
         sigmasq_1 = cmean[::-1]/scaling
 
         # Second estimation of Sigma^2; Eq 2 from ISMRM presentation
@@ -129,7 +129,7 @@ def denoising(dwi, mask=None):
             s = u @ np.diag(np.sqrt(N*vals)) @ v
             signal[:, :, nn] = s
 
-        # npars[nn] = t
+            # npars[nn] = t
 
 
     ceilInd= int(np.ceil(kernel.prod()/2))
@@ -141,5 +141,3 @@ def denoising(dwi, mask=None):
     return (Signal, Sigma)
 
 
-if __name__=='__main__':
-    pass

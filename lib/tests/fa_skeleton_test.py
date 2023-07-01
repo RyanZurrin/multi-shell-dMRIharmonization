@@ -56,7 +56,6 @@ def antsReg(img, mask, mov, outPrefix, n_thread=1):
                                '-m', mov,
                                '-n', str(n_thread),
                                '-o', outPrefix]), shell= True)
-        p.wait()
     else:
         p= Popen((' ').join(['antsRegistrationSyNQuick.sh',
                                '-d', '3',
@@ -64,7 +63,8 @@ def antsReg(img, mask, mov, outPrefix, n_thread=1):
                                '-m', mov,
                                '-n', str(n_thread),
                                '-o', outPrefix]), shell= True)
-        p.wait()
+
+    p.wait()
 
 
 def register_subject(imgPath, warp2mni, trans2mni, templatePath, siteName, bshell_b):
@@ -101,7 +101,7 @@ def register_subject(imgPath, warp2mni, trans2mni, templatePath, siteName, bshel
             '-t', warp2mni, trans2mni, warp2tmp, trans2tmp
         ] & FG
 
-    return pjoin(templatePath, prefix + f'_InMNI_FA.nii.gz')
+    return pjoin(templatePath, prefix + '_InMNI_FA.nii.gz')
 
 
 def sub2tmp2mni(templatePath, siteName, faImgs, bshell_b, N_proc):
@@ -117,19 +117,28 @@ def sub2tmp2mni(templatePath, siteName, faImgs, bshell_b, N_proc):
     if not isfile(warp2mni):
         antsReg(mniTmp, None, moving, outPrefix, N_proc)
 
-    
-    pool= multiprocessing.Pool(N_proc)
-    res=[]
-    for imgPath in faImgs:
-        res.append(pool.apply_async(func= register_subject,
-                   args= (imgPath, warp2mni, trans2mni, templatePath, siteName, bshell_b, )))
 
+    pool= multiprocessing.Pool(N_proc)
+    res = [
+        pool.apply_async(
+            func=register_subject,
+            args=(
+                imgPath,
+                warp2mni,
+                trans2mni,
+                templatePath,
+                siteName,
+                bshell_b,
+            ),
+        )
+        for imgPath in faImgs
+    ]
     mniFAimgs= [r.get() for r in res]
 
     pool.close()
     pool.join()
-    
-    
+
+
     ''' 
     # loop for debugging
     mniFAimgs= []

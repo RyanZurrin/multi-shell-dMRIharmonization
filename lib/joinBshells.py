@@ -38,20 +38,16 @@ def joinBshells(imgPath, ref_bvals_file=None, ref_bvals=None, sep_prefix=None):
     directory= dirname(inPrefix)
     prefix = basename(inPrefix)
 
-    bvalFile= inPrefix+'.bval'
-    bvecFile= inPrefix+'.bvec'
+    bvalFile = f'{inPrefix}.bval'
+    bvecFile = f'{inPrefix}.bvec'
 
-    if sep_prefix:
-        harmPrefix= pjoin(directory, sep_prefix+ prefix)
-    else:
-        harmPrefix= inPrefix
+    harmPrefix = pjoin(directory, sep_prefix+ prefix) if sep_prefix else inPrefix
+    if not isfile(f'{harmPrefix}.bval'):
+        copyfile(bvalFile, f'{harmPrefix}.bval')
+    if not isfile(f'{harmPrefix}.bvec'):
+        copyfile(bvecFile, f'{harmPrefix}.bvec')
 
-    if not isfile(harmPrefix+'.bval'):
-        copyfile(bvalFile, harmPrefix+'.bval')
-    if not isfile(harmPrefix+'.bvec'):
-        copyfile(bvecFile, harmPrefix+'.bvec')
-
-    bvals= np.array(read_bvals(inPrefix+'.bval'))
+    bvals = np.array(read_bvals(f'{inPrefix}.bval'))
 
 
     joinedDwi = np.zeros((dim[0], dim[1], dim[2], dim[3]), dtype='float32')
@@ -62,17 +58,17 @@ def joinBshells(imgPath, ref_bvals_file=None, ref_bvals=None, sep_prefix=None):
         ind= np.where(abs(bval-bvals)<=BSHELL_MIN_DIST)[0]
 
         if bval==0.:
-            b0Img = load(inPrefix+'_b0.nii.gz')
+            b0Img = load(f'{inPrefix}_b0.nii.gz')
             b0 = b0Img.get_data()
             for i in ind:
                 joinedDwi[:,:,:,i]= b0
 
         else:
-            b0_bshell= load(harmPrefix+f'_b{int(bval)}.nii.gz').get_data()
+            b0_bshell = load(f'{harmPrefix}_b{int(bval)}.nii.gz').get_data()
 
             joinedDwi[:,:,:,ind] = b0_bshell[:,:,:,1:]
 
-    save_nifti(harmPrefix + '.nii.gz', joinedDwi, b0Img.affine, b0Img.header)
+    save_nifti(f'{harmPrefix}.nii.gz', joinedDwi, b0Img.affine, b0Img.header)
 
 
 def joinAllBshells(tar_csv, ref_bvals_file, separatedPrefix=None, ncpu=4):

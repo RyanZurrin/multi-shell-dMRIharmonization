@@ -157,7 +157,7 @@ class multi_shell_pipeline(cli.Application):
             '--nproc', self.N_proc,
             '--template', self.templatePath,
             ]
-        
+
         if self.reference:
             pipeline_vars.append(f'--ref_name {self.reference}')
         if self.N_zero:
@@ -176,7 +176,7 @@ class multi_shell_pipeline(cli.Application):
             pipeline_vars.append('--debug')
         if self.verbose:
             pipeline_vars.append('--verbose')
-        
+
 
         # the b-shell bvalues are sorted in descending order because we want to perform registration with highest bval
         ref_bvals= read_bvals(ref_bvals_file)[::-1]
@@ -185,33 +185,74 @@ class multi_shell_pipeline(cli.Application):
             if self.create and not self.process:
                 print('## template creation ##')
 
-                check_call((' ').join([pjoin(SCRIPTDIR, 'harmonization.py'),
-                '--tar_list', tarListOutPrefix+f'_b{int(bval)}.csv',
-                '--bshell_b', str(int(bval)),
-                '--ref_list', refListOutPrefix+f'_b{int(bval)}.csv',
-                '--create'] + pipeline_vars), shell= True)
+                check_call(
+                    (' ').join(
+                        (
+                            [
+                                pjoin(SCRIPTDIR, 'harmonization.py'),
+                                '--tar_list',
+                                f'{tarListOutPrefix}_b{int(bval)}.csv',
+                                '--bshell_b',
+                                str(int(bval)),
+                                '--ref_list',
+                                f'{refListOutPrefix}_b{int(bval)}.csv',
+                                '--create',
+                            ]
+                            + pipeline_vars
+                        )
+                    ),
+                    shell=True,
+                )
 
 
 
             elif not self.create and self.process:
                 print('## data harmonization ##')
 
-                check_call((' ').join([pjoin(SCRIPTDIR, 'harmonization.py'),
-                '--tar_list', tarListOutPrefix + f'_b{int(bval)}.csv',
-                f'--ref_list {refListOutPrefix}_b{int(bval)}.csv' if self.ref_csv else '',
-                '--bshell_b', str(int(bval)),
-                '--process'] + pipeline_vars), shell=True)
+                check_call(
+                    (' ').join(
+                        (
+                            [
+                                pjoin(SCRIPTDIR, 'harmonization.py'),
+                                '--tar_list',
+                                f'{tarListOutPrefix}_b{int(bval)}.csv',
+                                f'--ref_list {refListOutPrefix}_b{int(bval)}.csv'
+                                if self.ref_csv
+                                else '',
+                                '--bshell_b',
+                                str(int(bval)),
+                                '--process',
+                            ]
+                            + pipeline_vars
+                        )
+                    ),
+                    shell=True,
+                )
 
 
 
-            elif self.create and self.process:
-                check_call((' ').join([pjoin(SCRIPTDIR, 'harmonization.py'),
-                '--tar_list', tarListOutPrefix + f'_b{int(bval)}.csv',
-                '--bshell_b', str(int(bval)),
-                '--ref_list', refListOutPrefix+f'_b{int(bval)}.csv',
-                '--create', '--process'] + pipeline_vars), shell=True)
+            elif self.create:
+                check_call(
+                    (' ').join(
+                        (
+                            [
+                                pjoin(SCRIPTDIR, 'harmonization.py'),
+                                '--tar_list',
+                                f'{tarListOutPrefix}_b{int(bval)}.csv',
+                                '--bshell_b',
+                                str(int(bval)),
+                                '--ref_list',
+                                f'{refListOutPrefix}_b{int(bval)}.csv',
+                                '--create',
+                                '--process',
+                            ]
+                            + pipeline_vars
+                        )
+                    ),
+                    shell=True,
+                )
 
-                
+
             if '--force' in pipeline_vars:
                 pipeline_vars.remove('--force')
 
@@ -219,7 +260,7 @@ class multi_shell_pipeline(cli.Application):
         ## join harmonized data
         if self.process:
             joinAllBshells(self.target_csv, ref_bvals_file, 'harmonized_', self.N_proc)
-        
+
             if self.debug and self.ref_csv:
                 joinAllBshells(self.ref_csv, ref_bvals_file, 'reconstructed_', self.N_proc)
 

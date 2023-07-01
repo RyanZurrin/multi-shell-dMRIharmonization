@@ -24,11 +24,11 @@ from fileUtil import read_caselist
 eps= 2.2204e-16
 SCRIPTDIR= abspath(dirname(__file__))
 config = ConfigParser()
-config.read(SCRIPTDIR+'/harm_config.ini')
+config.read(f'{SCRIPTDIR}/harm_config.ini')
 N_shm = int(config['DEFAULT']['N_shm'])
 N_proc = int(config['DEFAULT']['N_proc'])
 bshell_b = int(config['DEFAULT']['bshell_b'])
-diffusionMeasures= [x for x in config['DEFAULT']['diffusionMeasures'].split(',')]
+diffusionMeasures = list(config['DEFAULT']['diffusionMeasures'].split(','))
 travelHeads= int(config['DEFAULT']['travelHeads'])
 verbose = int(config['DEFAULT']['verbose'])
 
@@ -49,20 +49,22 @@ def warp_bands(imgPath, maskPath, templatePath):
     prefix= basename(imgPath).split('.nii')[0]
     transPrefix= prefix.replace(f'_b{bshell_b}','')
     directory= dirname(imgPath)
-    warp = glob(pjoin(templatePath, transPrefix + f'*_FA*[!ToMNI]1Warp.nii.gz'))
-    trans = glob(pjoin(templatePath, transPrefix + f'*_FA*[!ToMNI]0GenericAffine.mat'))
-    
+    warp = glob(pjoin(templatePath, f'{transPrefix}*_FA*[!ToMNI]1Warp.nii.gz'))
+    trans = glob(
+        pjoin(templatePath, f'{transPrefix}*_FA*[!ToMNI]0GenericAffine.mat')
+    )
+
     # print(prefix)
     # print('transforms', warp, trans,'\n\n')
-    
-    
+
+
     # warping the mask
     applyXform(maskPath,
                pjoin(templatePath, 'template0.nii.gz'),
                warp, trans,
                pjoin(templatePath, basename(maskPath).split('.nii')[0] + 'Warped.nii.gz'))
 
-    
+
     '''
     # warping the rish features
     for i in range(0, N_shm+1, 2):
