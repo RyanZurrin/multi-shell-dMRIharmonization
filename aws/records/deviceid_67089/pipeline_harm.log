@@ -74112,3 +74112,6 @@
 2023-06-29 04:26:17,829:INFO:Joining b-shells for /home/ec2-user/DATA/deviceID67089/target/HCD2884175_EdEp.nii.gz
 2023-06-29 04:26:17,862:INFO:Joining b-shells for /home/ec2-user/DATA/deviceID67089/target/HCD2617657_EdEp.nii.gz
 2023-06-29 04:26:17,869:INFO:Joining b-shells for /home/ec2-user/DATA/deviceID67089/target/HCD2786074_EdEp.nii.gz
+
+Total subjects: 166
+Total time: 9 hours, 48 minutes, and 47 seconds
